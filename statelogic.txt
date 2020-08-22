@@ -1,0 +1,76 @@
+_Intro:
+The Air controller chart is a system that cools a physical plant by transitioning between
+several modes of operation and, therefore, can be modeled as a finite state machine.
+------------------------------------------------------------------------------------------
+
+_Analysis of operting modes (states).
+__Mode#01 - Power Off
+\_Desc.:
+    Turns off all power in the control system.
+\_Dependencies:
+    No fan can operate when power is off.
+
+__Mode#02 - Power On
+\_Desc.:
+    Turns on all power in the control system.
+\_Dependencies:
+    Zero, one, or two fans can operate when power is on.
+
+__Mode#03 - Fan 1
+\_Desc.:
+    Activates Fan 1.
+\_Dependencies:
+    Fan 1 can be active at the same time as Fan 2. When activated, Fan 1 can turn on or
+    off.
+
+__Mode#04 - Fan 1 On
+\_Desc.:
+    Cycles on Fan 1.
+\_Dependencies:
+    Fan 1 On can be active if Fan 1 is active and power is on.
+
+__Mode#05 - Fan 1 Off
+\_Desc.:
+    Cycles off Fan 1.
+\_Dependencies:
+    Fan 1 Off can be active if Fan 1 is active and power is on.
+
+__Mode#06 - Fan 2
+\_Desc.:
+    Activates Fan 2
+\_Dependencies:
+    Fan 2 can be active at the same time as Fan 1. When activated, Fan 2 can turn on or
+    off.
+
+__Mode#07 - Fan 2 On
+\_Desc.:
+    Cycles on Fan 2.
+\_Dependencies:
+    Fan 2 On can be active if Fan 2 is active and power is on.
+
+__Mode#08 - Fan 2 Off
+\_Desc.:
+    Cycles of Fan 2.
+\_Dependencies:
+    Fan 2 Off can be active if Fan 2 is active and power is on.
+
+__Mode#09 - Calculate airflow
+\_Desc.:
+    Calculates a constant value of 0, 1, or 2 to indicate how fast ir is flowing. Outputs
+    this value to simulink subsystem for selecting a cooling factor.
+\_Dependencies:
+    Calculates the constant value, based on how many fans have cycled on at each time
+    step.
+------------------------------------------------------------------------------------------
+
+States definition: State Name  ->  Operating Mode
+PowerOff    ->  Power Off
+PowerOn     ->  Power On
+FAN1        ->  Fan 1
+FAN2        ->  Fan 2
+SpeedValue  ->  Calculate airflow
+FAN1.On     -?  Fan 1 On
+FAN1.Off    -?  Fan 1 Off
+FAN2.On     ->  Fan 2 On
+FAN2.Off    ->  Fan 2 Off
+__________________________________________________________________________________________
