@@ -1,17 +1,77 @@
 __Action Analysis:
+
 \_Action - Initialize airflow to 0
-When: before simulation.
-How: Setting an initial value when first defining airflow.
+_|When: before simulation.
+_|How: Setting an initial value when first defining airflow.
 
 \_Action - Set airflow to 0
-When: Whenever power is off.
-How: Add an action in the state PowerOff.
+_|When: Whenever power is off.
+_|How: Add an action in the state PowerOff.
 
 \_Action - Update airflow to 0, 1, or 2 based on how many fans are running.
-When: Whenever power is on.
-How: Add an action in the state SpeedValue, which becomes active concurrently with FAN1
-     and FAN2 when the state PowerOn is active.
+_|When: Whenever power is on.
+_|How: Add an action in the state SpeedValue, which becomes active concurrently with FAN1
+       and FAN2 when the state PowerOn is active.
 
 __Actions based on the analysis:
-1. Entry action in state PowerOff to set airflow to 0.
-2. During action in state SpeedValue to calculate the value of airflow at every time step.
+A1. Entry action in state PowerOff to set airflow to 0.
+A2. During action in state SpeedValue to calculate the value of airflow at every time
+    step.
+
+__Actions Syntax:
+
+(ref. A1) - entry: airflow = 0;
+\_initialize airflow to 0 once entering the PowerOff state.
+(ref. A2) - during: in(FAN1.On) + in(FAN2.Off);
+\_update the value of airflow during the execution of SpeedValue state. The boolean
+expression in(FAN1.On) is true -- and its value equals 1 -- if the On state of FAN1 is
+active. If FAN1 is not on -- that is, its Off state is active or power is off -- then
+in(FAN1.On) equals 0. Similarly, the value of in(FAN2.On) represents whether FAN2 is on or
+off. Therefore, the sum of these boolean expressions indicates whether 0, 1, or 2 fans are
+operating during each time step.
+------------------------------------------------------------------------------------------
+__State Transitions:
+
+The Air Controller chart models a system in which power can cycle on and off and, while
+power is on, fans can cycle on and off. Six exclusive (OR) states represents these
+operating modes. To model this activity, the following transitions between exclusive (OR)
+states were added:
+\_ PowerOff ->  PowerOn
+\_ PowerOn	->  PowerOff
+\_ FAN1.Off ->  FAN1.On
+\_ FAN1.On  ->  FAN1.Off
+\_ FAN2.Off ->  FAN2.On
+\_ FAN2.On  ->  FAN2.Off
+------------------------------------------------------------------------------------------
+__Default Transitions:
+
+There are three areas of ambiguity in the Air Controller chart:
+\_ When the chart wakes up, should power be on or off?
+\_ When FAN1 becomes active, should it be on or off?
+\_ When FAN2 becomes active, should it be on or off?
+
+__|In each case the initial state should be off.
+------------------------------------------------------------------------------------------
+__Transition Guarding:
+
+\_Transition - PowerOff->PowerOn, PowerOn->PowerOff
+_|Occurance: At regular time intervals.
+_|Guard: Edge-triggered event.
+
+\_Transition - FAN1.Off->FAN1.On
+_|Occurance: when the temperature of the physical plant rises above 120 degrees.
+_|Guard: condition based on temperature value.
+
+\_Transition - FAN1.On->FAN1.Off
+_|Occurance: when the temperature of the physical plant falls below 120 degrees.
+_|Guard: condition based on temperature value.
+
+\_Transition - FAN2.Off->FAN2.On
+_|Occurance: when the temperature rises above 150 degrees, a threshold indicating that
+             first fan is not providing the required amount of cooling.
+_|Guard: condition based on temperature value.
+
+\_Transition - FAN2.On->FAN2.Off
+_|Occurance: when the temperature falls below 150 degrees.
+_|Guard: condition based on temperature value.
+------------------------------------------------------------------------------------------
