@@ -1,0 +1,17 @@
+__Action Analysis:
+\_Action - Initialize airflow to 0
+When: before simulation.
+How: Setting an initial value when first defining airflow.
+
+\_Action - Set airflow to 0
+When: Whenever power is off.
+How: Add an action in the state PowerOff.
+
+\_Action - Update airflow to 0, 1, or 2 based on how many fans are running.
+When: Whenever power is on.
+How: Add an action in the state SpeedValue, which becomes active concurrently with FAN1
+     and FAN2 when the state PowerOn is active.
+
+__Actions based on the analysis:
+1. Entry action in state PowerOff to set airflow to 0.
+2. During action in state SpeedValue to calculate the value of airflow at every time step.

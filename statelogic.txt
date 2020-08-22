@@ -2,8 +2,7 @@ _Intro:
 The Air controller chart is a system that cools a physical plant by transitioning between
 several modes of operation and, therefore, can be modeled as a finite state machine.
 ------------------------------------------------------------------------------------------
-
-_Analysis of operting modes (states).
+_Analysis of operting modes (states):
 __Mode#01 - Power Off
 \_Desc.:
     Turns off all power in the control system.
@@ -62,8 +61,7 @@ __Mode#09 - Calculate airflow
     Calculates the constant value, based on how many fans have cycled on at each time
     step.
 ------------------------------------------------------------------------------------------
-
-States definition: State Name  ->  Operating Mode
+_States definition: State Name  ->  Operating Mode
 PowerOff    ->  Power Off
 PowerOn     ->  Power On
 FAN1        ->  Fan 1
@@ -73,4 +71,47 @@ FAN1.On     -?  Fan 1 On
 FAN1.Off    -?  Fan 1 Off
 FAN2.On     ->  Fan 2 On
 FAN2.Off    ->  Fan 2 Off
-__________________________________________________________________________________________
+------------------------------------------------------------------------------------------
+_State Hierarchy:
+\_Dependent States:
+DS#01 - FAN1 and FAN2 depend on PowerOn. No fan can operate unless PowerOn is active.
+DS#02 - FAN1.On and FAN1.Off depend on FAN1 and PowerOn.FAN1 must be active before it can
+        be cycled on or off.
+DS#03 - FAN2.On and FAN2.Off depend on FAN2 and PowerOn.FAN2 must be active before it can
+        be cycled on or off.
+DS#04 - The state that calculates airflow needs to know how many fans are running at each
+        timestep.
+\_Implied Hierarchy:
+(ref. DS#01) - FAN1 and FAN2 should be substates of a PowerOn state.
+(ref. DS#02) - FAN1 should have two substates. On and Off. In this hierarchical
+               relationship, On and Off will inherit from FAN1 the dependency on PowerOn.
+(ref. DS#03) - FAN2 should have two substates. On and Off. In this hierarchical
+               relationship, On and Off will inherit from FAN2 the dependency on PowerOff.
+(ref. DS#04) - The state that calculates airflow should be a substate of PowerOn so it can
+               check the status of FAN1 and FAN2 at the same level of hierarchy.
+------------------------------------------------------------------------------------------
+_States Decomposition:
+\_PowerOff, PowerOn:
+Decomposition - Exclusive (OR) states.
+Rationale - The power can never be on and off at the same time.
+
+\_FAN1, FAN2:
+Decomposition - Parallel (AND) states.
+Rationale - Zero, one, or two fans can operate at the same time, depending on how much
+            cooling is required.
+
+\_FAN1.On, FAN1.Off:
+Decomposition - Exclusive (OR) states.
+Rationale - Fan 1 can never be on and off at the same time.
+
+\_FAN2.On, FAN2.Off:
+Decomposition - Exclusive (OR) states.
+Rationale - Fan 2 can never be on and off at the same time.
+
+\_SpeedValue:
+Decomposition - Parallel (AND) state.
+Rationale - SpeedValue is an observer state that monitors the status of Fan 1 and Fan 2,
+            updating its output based on how many fans are operating at each time step.
+            SpeedValue must be activiated at the same time as Fan 1 and Fan 2, but
+            execute last so it can capture the most current status of the fans.
+------------------------------------------------------------------------------------------
